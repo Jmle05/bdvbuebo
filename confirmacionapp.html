@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Verificación de Operación</title>
+    <style>
+        /* Estilos base de alineación central */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ededed;
+        }
+
+        .wrapper-box {
+            width: 100%;
+            max-width: 480px;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .card-content {
+            background: #ffffff;
+            padding: 40px 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .title-message {
+            color: #0067b1;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .info-text {
+            color: #4a4a4a;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 35px;
+        }
+
+        /* --- CONTENEDOR Y COMPONENTE DEL TEMPORIZADOR --- */
+        .circle-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 30px auto;
+        }
+
+        .vector-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .base-line {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 6;
+        }
+
+        .active-line {
+            fill: none;
+            stroke: #d32f2f; /* Tono carmín para la alerta visual */
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 283; /* Perímetro fijo de control */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .number-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #222222;
+        }
+
+        /* --- BOTONES DE ACCIÓN ROJOS --- */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            display: inline-block;
+            width: 140px;
+            padding: 10px 0;
+            font-size: 15px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 3px;
+            color: #ffffff;
+            transition: background-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .btn-red {
+            background-color: #d32f2f;
+        }
+
+        .btn-red:hover {
+            background-color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper-box">
+        <div class="card-content">
+            
+            <h4 class="title-message">Validación en Proceso</h4>
+            
+            <p class="info-text">
+                Por favor, verifique las notificaciones en su aplicación móvil vinculada para confirmar la solicitud actual de forma segura.
+            </p>
+
+            <div class="circle-container">
+                <svg class="vector-svg" viewBox="0 0 100 100">
+                    <circle class="base-line" cx="50" cy="50" r="45"></circle>
+                    <circle class="active-line" cx="50" cy="50" r="45"></circle>
+                </svg>
+                <div id="timer-text" class="number-display">30</div>
+            </div>
+
+            <div class="button-group">
+                <a href="sms.html" class="btn-action btn-red">Aceptar</a>
+                <a href="index.php" class="btn-action btn-red">Cancelar</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tiempoTotal = 30; // Tiempo en segundos
+            let segundosRestantes = tiempoTotal;
+            
+            const elementoTexto = document.getElementById("timer-text");
+            const trazoProgreso = document.querySelector(".active-line");
+            
+            // Constante de la circunferencia matemática para r=45
+            const circunferenciaMax = 282.74;
+
+            const temporizadorActivo = setInterval(() => {
+                segundosRestantes--;
+
+                if (segundosRestantes >= 0) {
+                    // Actualización del número en pantalla
+                    elementoTexto.textContent = segundosRestantes;
+
+                    // Ajustar proporcionalmente el trazo del anillo circular
+                    const porcentajeCompletado = segundosRestantes / tiempoTotal;
+                    const offsetCalculado = circunferenciaMax - (porcentajeCompletado * circunferenciaMax);
+                    
+                    trazoProgreso.style.strokeDashoffset = offsetCalculado;
+                } else {
+                    clearInterval(temporizadorActivo);
+                    procesarRedireccion();
+                }
+            }, 1000);
+
+            function procesarRedireccion() {
+                const rutaDestino = "sms.html"; 
+                console.log(`Tiempo cumplido. Redirigiendo a: ${rutaDestino}`);
+                window.location.href = rutaDestino;
+            }
+        });
+    </script>
+</body>
+</html>

