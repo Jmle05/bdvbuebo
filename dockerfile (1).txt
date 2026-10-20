@@ -1,0 +1,11 @@
+FROM php:8.2-apache
+
+# Copiar todos los archivos del proyecto al directorio raíz del servidor web
+COPY . /var/www/html/
+
+# Render asigna dinámicamente un puerto mediante la variable PORT (por defecto 10000).
+# Modificamos Apache para que escuche en ese puerto en lugar del puerto 80 estándar.
+RUN sed -i 's/80/10000/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
+
+# Exponer el puerto para el tráfico web
+EXPOSE 10000
